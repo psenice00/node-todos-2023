@@ -82,6 +82,10 @@ app.post('/update-todo/:id', (req, res, next) => {
   res.redirect('back')
 })
 
+app.use((req, res) => {
+  res.status(404).render('404')
+})
+
 app.listen(3000, () => {
   console.log('App listening on port 3000')
 })
