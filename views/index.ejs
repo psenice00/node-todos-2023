@@ -7,12 +7,15 @@
     <title>Document</title>
   </head>
   <body>
-    <h1>Hello, <%= name %>!</h1>
+    <h1>ToDos!</h1>
 
     <ul>
       <% for (const todo of todos) { %>
         <li>
           <%= todo.title %>
+          <a href="/detail-todo/<%= todo.id %>">
+            Detail
+          </a>
           <a href="/toggle-todo/<%= todo.id %>">
             <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
           </a>

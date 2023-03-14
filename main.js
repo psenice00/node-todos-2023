@@ -21,7 +21,6 @@ let todos = [
 
 app.get('/', (req, res) => {
   res.render('index', {
-    name: 'Adam',
     todos: todos,
   })
 })
@@ -46,14 +45,41 @@ app.get('/remove-todo/:id', (req, res) => {
   res.redirect('/')
 })
 
-app.get('/toggle-todo/:id', (req, res) => {
+app.get('/toggle-todo/:id', (req, res, next) => {
   const idToToggle = Number(req.params.id)
 
-  const todo = todos.find((todo) => todo.id === idToToggle)
+  const todoToToggle = todos.find((todo) => todo.id === idToToggle)
 
-  todo.done = !todo.done
+  if (!todoToToggle) return next()
 
-  res.redirect('/')
+  todoToToggle.done = !todoToToggle.done
+
+  res.redirect('back')
+})
+
+app.get('/detail-todo/:id', (req, res, next) => {
+  const idToShow = Number(req.params.id)
+
+  const todoToShow = todos.find((todo) => todo.id === idToShow)
+
+  if (!todoToShow) return next()
+
+  res.render('detail', {
+    todo: todoToShow,
+  })
+})
+
+app.post('/update-todo/:id', (req, res, next) => {
+  const idToUpdate = Number(req.params.id)
+  const newTitle = String(req.body.title)
+
+  const todoToUpdate = todos.find((todo) => todo.id === idToUpdate)
+
+  if (!todoToUpdate) return next()
+
+  todoToUpdate.title = newTitle
+
+  res.redirect('back')
 })
 
 app.listen(3000, () => {
