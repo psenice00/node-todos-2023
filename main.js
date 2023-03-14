@@ -1,59 +1,51 @@
 import express from 'express'
+import knex from 'knex'
+import knexfile from './knexfile.js'
 
 const app = express()
+const db = knex(knexfile)
 
 app.set('view engine', 'ejs')
 
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
 
-let todos = [
-  {
-    id: Math.random(),
-    title: 'Nakoupit jídlo',
-    done: false,
-  },
-  {
-    id: Math.random(),
-    title: 'Nakoupit pivo',
-    done: true,
-  },
-]
+let todos = []
 
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
+  const todos = await db('todos').select('*')
+
   res.render('index', {
     todos: todos,
   })
 })
 
-app.post('/new-todo', (req, res) => {
+app.post('/new-todo', async (req, res) => {
   const newTodo = {
-    id: Math.random(),
     title: req.body.title,
-    done: false,
   }
 
-  todos.push(newTodo)
+  await db('todos').insert(newTodo)
 
   res.redirect('/')
 })
 
-app.get('/remove-todo/:id', (req, res) => {
+app.get('/remove-todo/:id', async (req, res) => {
   const idToRemove = Number(req.params.id)
 
-  todos = todos.filter((todo) => todo.id !== idToRemove)
+  await db('todos').delete().where('id', idToRemove)
 
   res.redirect('/')
 })
 
-app.get('/toggle-todo/:id', (req, res, next) => {
+app.get('/toggle-todo/:id', async (req, res, next) => {
   const idToToggle = Number(req.params.id)
 
-  const todoToToggle = todos.find((todo) => todo.id === idToToggle)
+  const todoToToggle = await db('todos').select('*').where('id', idToToggle).first()
 
   if (!todoToToggle) return next()
 
-  todoToToggle.done = !todoToToggle.done
+  await db('todos').update({ done: !todoToToggle.done }).where('id', idToToggle)
 
   res.redirect('back')
 })
