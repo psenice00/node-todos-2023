@@ -10,12 +10,10 @@ app.set('view engine', 'ejs')
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
 
-let todos = []
-
 app.get('/', async (req, res) => {
   const todos = await db('todos').select('*')
 
-  res.render('index', {
+  return res.render('index', {
     todos: todos,
   })
 })
@@ -50,10 +48,10 @@ app.get('/toggle-todo/:id', async (req, res, next) => {
   res.redirect('back')
 })
 
-app.get('/detail-todo/:id', (req, res, next) => {
+app.get('/detail-todo/:id', async (req, res, next) => {
   const idToShow = Number(req.params.id)
 
-  const todoToShow = todos.find((todo) => todo.id === idToShow)
+  const todoToShow = await db('todos').select('*').where('id', idToShow).first()
 
   if (!todoToShow) return next()
 
@@ -62,15 +60,15 @@ app.get('/detail-todo/:id', (req, res, next) => {
   })
 })
 
-app.post('/update-todo/:id', (req, res, next) => {
+app.post('/update-todo/:id', async (req, res, next) => {
   const idToUpdate = Number(req.params.id)
   const newTitle = String(req.body.title)
 
-  const todoToUpdate = todos.find((todo) => todo.id === idToUpdate)
+  const todoToUpdate = await db('todos').select('*').where('id', idToUpdate).first()
 
   if (!todoToUpdate) return next()
 
-  todoToUpdate.title = newTitle
+  await db('todos').update({ title: newTitle }).where('id', idToUpdate)
 
   res.redirect('back')
 })
