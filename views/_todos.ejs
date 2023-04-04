@@ -1,0 +1,27 @@
+<table>
+  <% for (const todo of todos) { %>
+    <tr>
+      <td>
+        <%= todo.title %>
+      </td>
+      <td>
+        <%= todo.deadline ? todo.deadline : 'bez termínu' %>
+      </td>
+      <td>
+        <a href="/detail-todo/<%= todo.id %>">
+          Detail
+        </a>
+      </td>
+      <td>
+        <a href="/toggle-todo/<%= todo.id %>">
+          <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
+        </a>
+      </td>
+      <td>
+        <a href="/remove-todo/<%= todo.id %>">
+          Odebrat
+        </a>
+      </td>
+    </tr>
+  <% } %>
+</table>
