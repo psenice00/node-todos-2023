@@ -9,25 +9,41 @@
   <body>
     <h1>ToDos!</h1>
 
-    <ul>
+    <a href="/">Zobrazit vše</a>
+    <a href="?done=false">Pouze nesplněné</a>
+    <a href="?done=true">Pouze splněné</a>
+
+    <table>
       <% for (const todo of todos) { %>
-        <li>
-          <%= todo.title %>
-          <a href="/detail-todo/<%= todo.id %>">
-            Detail
-          </a>
-          <a href="/toggle-todo/<%= todo.id %>">
-            <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
-          </a>
-          <a href="/remove-todo/<%= todo.id %>">
-            Odebrat
-          </a>
-        </li>
+        <tr>
+          <td>
+            <%= todo.title %>
+          </td>
+          <td>
+            <%= todo.deadline ? todo.deadline : 'bez termínu' %>
+          </td>
+          <td>
+            <a href="/detail-todo/<%= todo.id %>">
+              Detail
+            </a>
+          </td>
+          <td>
+            <a href="/toggle-todo/<%= todo.id %>">
+              <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
+            </a>
+          </td>
+          <td>
+            <a href="/remove-todo/<%= todo.id %>">
+              Odebrat
+            </a>
+          </td>
+        </tr>
       <% } %>
-    </ul>
+      </table>
 
     <form method="post" action="/new-todo">
       <input type="text" name="title">
+      <input type="date" name="deadline" >
       <button type="submit">Přidat TODO</button>
     </form>
   </body>

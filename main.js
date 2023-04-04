@@ -11,7 +11,13 @@ app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
 
 app.get('/', async (req, res) => {
-  const todos = await db('todos').select('*')
+  const query = db('todos').select('*')
+
+  if (req.query.done) {
+    query.where('done', req.query.done === 'true')
+  }
+
+  const todos = await query
 
   return res.render('index', {
     todos: todos,
@@ -21,6 +27,7 @@ app.get('/', async (req, res) => {
 app.post('/new-todo', async (req, res) => {
   const newTodo = {
     title: req.body.title,
+    deadline: req.body.deadline || null,
   }
 
   await db('todos').insert(newTodo)
