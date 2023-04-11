@@ -7,18 +7,7 @@
     <title><%= todo.title %></title>
   </head>
   <body>
-    <h1><%= todo.title %></h1>
-
-    <span>Termín: <%= todo.deadline ? todo.deadline : 'žádný' %></span>
-
-    <div>
-      <a href="/toggle-todo/<%= todo.id %>">
-        <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
-      </a>
-      <a href="/remove-todo/<%= todo.id %>">
-        Odebrat
-      </a>
-    </div>
+    <div id="todo"><%- include('_todo') %></div>
 
     <form method="post" action="/update-todo/<%= todo.id %>">
       <h2>Upravit</h2>
@@ -29,5 +18,18 @@
     <hr>
 
     <a href="/">Zpět na seznam ToDos</a>
+
+    <script>
+      const ws = new WebSocket('ws://localhost:3000')
+
+      ws.addEventListener('message', (ev) => {
+        const message = JSON.parse(ev.data)
+        if (message.type === 'todo' && message.id === Number('<%= todo.id %>')) {
+          document.getElementById('todo').innerHTML = message.html
+        } else if (message.type === 'todo-deleted' && message.id === Number('<%= todo.id %>')) {
+          document.getElementById('todo').innerHTML = '<h1>Todo bylo smazáno</h1>'
+        }
+      })
+    </script>
   </body>
 </html>

@@ -1,0 +1,12 @@
+<h1><%= todo.title %></h1>
+
+<span>Termín: <%= todo.deadline ? todo.deadline : 'žádný' %></span>
+
+<div>
+  <a href="/toggle-todo/<%= todo.id %>">
+    <%= todo.done ? 'Hotovo' : 'Nesplněno' %>
+  </a>
+  <a href="/remove-todo/<%= todo.id %>">
+    Odebrat
+  </a>
+</div>
