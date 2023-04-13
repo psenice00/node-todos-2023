@@ -78,6 +78,9 @@ app.post('/update-todo/:id', async (req, res, next) => {
   const idToUpdate = Number(req.params.id)
   const newTitle = String(req.body.title)
 
+  if (newTitle.trim() === '') {
+    res.status(400).render('400', { todo: { id: idToUpdate } });
+  } else {
   const todoToUpdate = await db('todos').select('*').where('id', idToUpdate).first()
 
   if (!todoToUpdate) return next()
@@ -88,6 +91,7 @@ app.post('/update-todo/:id', async (req, res, next) => {
   sendTodoToAllConnections(idToUpdate)
 
   res.redirect('back')
+  }
 })
 
 app.use((req, res) => {

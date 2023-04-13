@@ -58,6 +58,31 @@ test.serial('POST /update-todo/:id correctly updated todo', async (t) => {
   
 })
 
+test.serial('POST /update-todo/:id returns 400 because of empty title', async (t) => {
+  const response = await supertest(app)
+    .post('/new-todo')
+    .type('form')
+    .send({ title: 'Test todo from form' })
+    .redirects(1)
+
+  t.assert(response.text.includes('Test todo from form'))
+  t.assert(response.text.includes('Nesplněno'))
+
+  // get id of created todo and check if is present
+  const id = findAllIds(response.text)[0];
+  t.assert(!isNaN(id))
+
+  const detailResponse = await supertest(app).get(`/detail-todo/${id}`).redirects(1)
+
+  t.assert(detailResponse.text.includes('Test todo from form'))
+
+  const updatedResponse = await supertest(app).post(`/update-todo/${id}`).type('form').send({ title: '' }).redirects(1)
+  console.log('updatedResponse', updatedResponse.statusCode)
+  t.assert(updatedResponse.statusCode === 400)
+  t.assert(updatedResponse.text.includes('Chyba 400 - Bad request'))
+  
+})
+
 test.serial('GET /toggle-todo/:id correctly set done property in list', async (t) => {
   const response = await supertest(app)
     .post('/new-todo')
