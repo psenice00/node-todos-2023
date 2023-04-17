@@ -20,13 +20,20 @@ app.get('/', async (req, res) => {
 
   return res.render('index', {
     todos: todos,
+    error: req.query.error,
   })
 })
 
 app.post('/new-todo', async (req, res) => {
   const newTodo = {
-    title: req.body.title,
+    title: (req.body.title || '').trim(),
     deadline: req.body.deadline || null,
+  }
+
+  if (!newTodo.title) {
+    return res.status(400).render('400', {
+      error: 'Zadejte název todočka!',
+    })
   }
 
   await db('todos').insert(newTodo)
