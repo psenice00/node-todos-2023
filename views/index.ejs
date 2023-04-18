@@ -7,6 +7,14 @@
     <title>ToDos!</title>
   </head>
   <body>
+    <% if (user) { %>
+      <%= user.username %>
+    <% } else { %>
+      <a href="/register">Registrace</a>
+    <% } %>
+
+    <hr>
+
     <h1>ToDos!</h1>
 
     <a href="/">Zobrazit vše</a>
