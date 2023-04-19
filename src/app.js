@@ -1,5 +1,6 @@
 import express from 'express'
-import { db } from './database.js'
+import cookieParser from 'cookie-parser'
+import { createUser, db, getUserByToken } from './database.js'
 import { sendTodoDeletedToAllConnections, sendTodoToAllConnections, sendTodosToAllConnections } from './websockets.js'
 
 export const app = express()
@@ -8,6 +9,27 @@ app.set('view engine', 'ejs')
 
 app.use(express.static('public'))
 app.use(express.urlencoded({ extended: true }))
+app.use(cookieParser())
+
+app.use(async (req, res, next) => {
+  const token = req.cookies.token
+
+  if (token) {
+    res.locals.user = await getUserByToken(token)
+  } else {
+    res.locals.user = null
+  }
+
+  next()
+})
+
+const requiresAuth = (req, res, next) => {
+  if (res.locals.user) {
+    next()
+  } else {
+    res.redirect('/register')
+  }
+}
 
 app.get('/', async (req, res) => {
   const query = db('todos').select('*')
@@ -25,8 +47,14 @@ app.get('/', async (req, res) => {
 
 app.post('/new-todo', async (req, res) => {
   const newTodo = {
-    title: req.body.title,
+    title: (req.body.title || '').trim(),
     deadline: req.body.deadline || null,
+  }
+
+  if (!newTodo.title) {
+    return res.status(400).render('400', {
+      error: 'Zadejte název todočka!',
+    })
   }
 
   await db('todos').insert(newTodo)
@@ -88,6 +116,18 @@ app.post('/update-todo/:id', async (req, res, next) => {
   sendTodoToAllConnections(idToUpdate)
 
   res.redirect('back')
+})
+
+app.get('/register', (req, res) => {
+  res.render('register')
+})
+
+app.post('/register', async (req, res) => {
+  const user = await createUser(req.body.username, req.body.password)
+
+  res.cookie('token', user.token)
+
+  res.redirect('/')
 })
 
 app.use((req, res) => {
