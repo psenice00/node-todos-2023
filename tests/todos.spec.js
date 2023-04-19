@@ -1,7 +1,7 @@
 import test from 'ava'
 import supertest from 'supertest'
 import { app } from '../src/app.js'
-import { db } from '../src/database.js'
+import { db, createUser } from '../src/database.js'
 
 test.beforeEach(async () => {
   await db.migrate.latest()
@@ -106,3 +106,47 @@ test.serial('POST /new-todo shows error message for title with multiple spaces',
 
   t.assert(response.text.includes('Zadejte název todočka!'))
 })
+
+test.serial('GET / lists only anonymously created todos', async (t) => {
+  const {id} = await createUser('kuba', 'password')
+  await db('todos').insert({ title: 'Private todo!!!', userId: id  })
+  await db('todos').insert({ title: 'Test todo from form'  })
+
+    const response = await supertest(app)
+    .get('/')
+    .redirects(1)
+
+  t.assert(response.text.includes('Test todo from form'))
+  t.assert(!response.text.includes('Private todo!!!'))
+})
+
+test.serial('POST /new-todo creates and lists only public todos', async (t) => {
+  const {id} = await createUser('kuba', 'password')
+  await db('todos').insert({ title: 'Private todo!!!', userId: id  })
+
+  const response = await supertest(app)
+    .post('/new-todo')
+    .type('form')
+    .send({ title: 'Test todo from form' })
+    .redirects(1)
+
+  t.assert(response.text.includes('Test todo from form'))
+  t.assert(!response.text.includes('Private todo!!!'))
+})
+
+test.serial('POST /update-todo/:id updates publicly created todo', async (t) => {
+  const {id} = await createUser('kuba', 'password')
+  await db('todos').insert({ title: 'Private todo!!!', userId: id  })
+  const todo = await db('todos').insert({ title: 'Test todo from form'  })
+
+  const response = await supertest(app)
+    .post(`/update-todo/${todo[0]}`)
+    .type('form')
+    .send({ title: 'Updated title' })
+    .redirects(1)
+
+  t.assert(response.text.includes('Updated title'))
+  t.assert(!response.text.includes('Test todo from form'))
+  t.assert(!response.text.includes('Private todo!!!'))
+})
+
