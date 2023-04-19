@@ -1,6 +1,6 @@
 import express from 'express'
 import cookieParser from 'cookie-parser'
-import { createUser, db, getUserByToken } from './database.js'
+import { createUser, db, getUserByToken, getUserByPassword } from './database.js'
 import { sendTodoDeletedToAllConnections, sendTodoToAllConnections, sendTodosToAllConnections } from './websockets.js'
 
 export const app = express()
@@ -127,6 +127,26 @@ app.post('/register', async (req, res) => {
 
   res.cookie('token', user.token)
 
+  res.redirect('/')
+})
+
+app.get('/login', (req, res) => {
+  res.render('login')
+})
+
+app.post('/login', async (req, res) => {
+  const user = await getUserByPassword(req.body.username, req.body.password)
+
+  if(user){
+    res.cookie('token', user.token)
+    res.redirect('/')
+  } else {
+    res.redirect('/login')
+  }
+})
+
+app.get('/logout', (req, res) => {
+  res.clearCookie('token')
   res.redirect('/')
 })
 
