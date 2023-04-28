@@ -76,18 +76,32 @@ app.post('/new-todo', async (req, res) => {
 
   await db('todos').insert(newTodo)
 
-  sendTodosToAllConnections()
+  sendTodosToAllConnections(user?.id ? user.id : null)
 
   res.redirect('/')
 })
 
-app.get('/remove-todo/:id', async (req, res) => {
+app.get('/remove-todo/:id', async (req, res, next) => {
+  const user = await usetUserFromToken(req.cookies.token)
+
   const idToRemove = Number(req.params.id)
+
+  const query = db('todos').select('*').where('id', idToRemove)
+
+  if(user?.id) {
+    query.where('userId', user.id)
+  } else {
+    query.whereNull('userId')
+  }
+
+  const todoToToggle = await query.first()
+
+  if (!todoToToggle) return next()
 
   await db('todos').delete().where('id', idToRemove)
 
-  sendTodosToAllConnections()
-  sendTodoDeletedToAllConnections(idToRemove)
+  sendTodosToAllConnections(todoToToggle?.userId ? todoToToggle.userId : null)
+  sendTodoDeletedToAllConnections(idToRemove, todoToToggle?.userId ? todoToToggle.userId : null)
 
   res.redirect('/')
 })
@@ -111,8 +125,8 @@ app.get('/toggle-todo/:id', async (req, res, next) => {
 
   await db('todos').update({ done: !todoToToggle.done }).where('id', idToToggle)
 
-  sendTodosToAllConnections()
-  sendTodoToAllConnections(idToToggle)
+  sendTodosToAllConnections(user?.id)
+  sendTodoToAllConnections(idToToggle, user?.id)
 
   res.redirect('back')
 })
@@ -156,8 +170,8 @@ app.post('/update-todo/:id', async (req, res, next) => {
 
   await db('todos').update({ title: newTitle }).where('id', idToUpdate)
 
-  sendTodosToAllConnections()
-  sendTodoToAllConnections(idToUpdate)
+  sendTodosToAllConnections(user?.id)
+  sendTodoToAllConnections(idToUpdate, user?.id)
 
   res.redirect('back')
 })
